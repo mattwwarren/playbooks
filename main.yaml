@@ -1,0 +1,77 @@
+---
+- name: Prep for work
+  hosts: local
+  become: true
+  become_user: root
+
+  tasks:
+  - name: Copy vscode repo
+    ansible.builtin.copy: 
+      src: vscode.repo
+      dest: /etc/zypp/repos.d/vscode.repo
+      mode: 0444
+
+  - name: Configure snappy repo
+    community.general.zypper_repository:
+      name: brave-browser
+      repo: https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
+
+  - name: Configure snappy repo
+    community.general.zypper_repository:
+      name: snappy
+      auto_import_keys: true
+      repo: https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed
+
+  - name: refresh zypper repos
+    community.general.zypper_repository:
+      auto_import_keys: true
+      runrefresh: true
+      repo: "*"
+
+  - name: install core packages
+    community.general.zypper:
+      name: 
+        - git
+        - python313-uv
+        - python313-pre-commit
+        - docker
+        - ispell-american
+        - code
+        - snapd
+        - brave-browser
+      state: latest
+
+  - name: add me to docker group
+    ansible.builtin.user:
+      append: true
+      name: matthew
+      groups:
+        - docker
+
+  - name: start snapd apparmor
+    ansible.builtin.service:
+      name: snapd.apparmor.service
+      enabled: true
+
+  - name: start snapd
+    ansible.builtin.service:
+      name: snapd
+      enabled: true
+      state: running
+
+  - name: start docker
+    ansible.builtin.service:
+      name: docker
+      enabled: true
+      state: running
+
+  - name: create workspace
+    ansible.builtin.file:
+      path: /home/matthew/workspace
+      state: directory
+
+  - name: grab bash configs
+    ansible.builtin.git:
+      repo: git@github.com:mattwwarren/useful-bash.git
+      dest: /home/matthew/workspace
+
