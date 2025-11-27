@@ -1,0 +1,16 @@
+---
+- name: Get work ready
+  hosts: localhost
+
+  tasks:
+  - name: create workspace
+    ansible.builtin.file:
+      path: /home/matthew/workspace
+      state: directory
+
+  - name: grab bash configs
+    ansible.builtin.git:
+      repo: git@github.com:mattwwarren/useful-bash.git
+      dest: /home/matthew/workspace/useful-bash
+      accept_newhostkey: true
+

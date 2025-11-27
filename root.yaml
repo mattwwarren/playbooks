@@ -1,6 +1,6 @@
 ---
 - name: Prep for work
-  hosts: local
+  hosts: localhost
   become: true
   become_user: root
 
@@ -11,20 +11,23 @@
       dest: /etc/zypp/repos.d/vscode.repo
       mode: 0444
 
-  - name: Configure snappy repo
+  - name: Add brave GPG key
+    ansible.builtin.rpm_key:
+      key: https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
+
+  - name: Configure brave repo
     community.general.zypper_repository:
-      name: brave-browser
+      auto_import_keys: true
       repo: https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
 
   - name: Configure snappy repo
     community.general.zypper_repository:
-      name: snappy
       auto_import_keys: true
+      name: snappy
       repo: https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed
 
   - name: refresh zypper repos
     community.general.zypper_repository:
-      auto_import_keys: true
       runrefresh: true
       repo: "*"
 
@@ -57,21 +60,11 @@
     ansible.builtin.service:
       name: snapd
       enabled: true
-      state: running
+      state: started
 
   - name: start docker
     ansible.builtin.service:
       name: docker
       enabled: true
-      state: running
-
-  - name: create workspace
-    ansible.builtin.file:
-      path: /home/matthew/workspace
-      state: directory
-
-  - name: grab bash configs
-    ansible.builtin.git:
-      repo: git@github.com:mattwwarren/useful-bash.git
-      dest: /home/matthew/workspace
+      state: started
 
